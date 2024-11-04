@@ -1,0 +1,1 @@
+void mod5(void);
