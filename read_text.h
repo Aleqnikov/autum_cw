@@ -1,14 +1,7 @@
-#define BASE_LEN_TEXT 10
-#define BASE_LEN_SENT 50
+#include "structures.h"
 
-typedef struct{
-	char string[BASE_LEN_SENT];
-}Sentence;
-
-
-typedef struct{
-	Sentence* sentences[BASE_LEN_TEXT];
-}Text;
-
-void read_text(char **text);
-
+void free_text(Text *text);
+void del_tabulation(Text *text);
+void first_read_text(char** text);
+void convert_text(char** text, Text* cnv_txt);
+void read_text(Text* cnv_txt);
