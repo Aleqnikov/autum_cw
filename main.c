@@ -2,6 +2,7 @@
 
 #include "mods.h"
 #include "read_text.h"
+#include "structures.h"
 
 
 
@@ -14,13 +15,15 @@ int main(void){
 	scanf("%d", &mode);
     getchar();
 
-    char *text = NULL;
+    
 
 	switch (mode)
 	{
 	case 1:
-		read_text(&text);
-        puts(text);
+        Text result;
+        read_text(&result);
+
+		free_text(&result);
 		break;
 	case 2:
 		
