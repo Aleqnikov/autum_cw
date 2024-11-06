@@ -3,7 +3,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdbool.h>
-
+#include <ctype.h>
 
 #define SIZE   11
 #define START_TEXT_SIZE 32  
@@ -31,6 +31,17 @@ void free_text(Text *text) {
     free(text->sentences); // Освобождаем массив предложений
 }
 
+// Delete tabs and space before first symbol
+void del_tabulation(Text *text){
+
+    for(int i = 0; i < text->count; i++){
+        int shift = 0;
+        while(isspace(text->sentences[i].string[shift]) != 0)
+            shift++;
+        for(int j = 0; j < strlen(text->sentences[i].string); j++) 
+            text->sentences[i].string[j] = text->sentences[i].string[j+shift];  
+    }  
+}
 
 int read_text(char** text) {
     size_t size = START_TEXT_SIZE; 
@@ -114,7 +125,6 @@ void convert_text(char** text, Text* cnv_txt){
             local_len_sent = 0;
             limit_len_sent = BASE_LEN_SENT;
             cnv_txt->count++;
-            printf("\n%d %d\n", cnv_txt->count, i);
             cnv_txt->sentences[cnv_txt->count].string = malloc(BASE_LEN_SENT * sizeof(char)); 
         }else{
             cnv_txt->sentences[cnv_txt->count].string[local_len_sent] = (*text)[i];
@@ -142,6 +152,7 @@ int main(void){
 
         Text result;
         convert_text(&text, &result);
+        del_tabulation(&result);
         free_text(&result);
 		break;
 	case 2:
