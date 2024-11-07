@@ -1,9 +1,3 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <stdbool.h>
-#include <ctype.h>
-
 #include "read_text.h"
 
 #define SIZE   11
@@ -13,6 +7,8 @@
 #define BASE_LEN_SENT 50
 
 /*
+    Предполагается, что в других местах программы будет использоваться только read_text.
+
     Все они второстепенные и нужны для модификаций главной функции, которая собственно и читает текст. Она должная быть в каждом режиме для 
     чтения текста. - read_text
     Функции данного файла преднозначены для первичной обработки текста, введенного в консоль.
@@ -22,9 +18,52 @@
     уже есть в тексте, и capacity - текущая ёмкость текста.
     А затем просходит удаление лишних пробелов перед началом предложения.
 
+    После этого функция dell_double удаляет предложения, которые уже есть в тексте.
+    Она же в свою очередь оперирует функцией check_double, которая посимвольно сравнивает два введённых предложения
+
     В свою очередь очистка памяти должна проходить после того как отработает модуль
 */
 
+bool check_double(Sentence checkd_sent, Sentence sent2){
+
+    /*
+    Несколько проверок, первая - если отличается длина, то сразу нет
+    А затем посимволно, и если хоть один символ отличается, то нет
+    */
+
+   if(strlen(checkd_sent.string) != strlen(sent2.string))
+        return false;
+   
+
+    for(int i = 0; i < strlen(checkd_sent.string); i++){
+        if(tolower(checkd_sent.string[i]) != tolower(sent2.string[i]))
+            return false;
+    }
+
+    return true;
+}
+
+
+void del_double(Text *text){
+    /*
+    Пробегает по всем предложениям, сравнивая с теми, что находятся сверху, если они равны, то сдвигает всё вверх.
+    */
+
+   for(int i = 0; i < text->count + 1; i++){
+        for(int j = 0; j < i; j++){
+            if(check_double(text->sentences[i], text->sentences[j])){
+                
+                // Сдвигаем предложения
+                for(int k = i; k < text->count; k++){
+                    text->sentences[k] = text->sentences[k + 1];
+                }
+                i--;
+                text->count--;
+                break;
+            }
+        }
+   }  
+}
 
 // Проверяет правильно ли выделена память
 void chk_crr_memall(void *ptr) {
@@ -36,7 +75,10 @@ void chk_crr_memall(void *ptr) {
 
 void free_text(Text *text) {
     for (size_t i = 0; i < text->count + 1; i++) {
-        puts(text->sentences[i].string); // Временно, для отладки
+        
+        // puts(text->sentences[i].string); // Временно, для отладки
+        printf("%s|", text->sentences[i].string);
+        
         free(text->sentences[i].string); // Освобождаем каждую строку
     }
     free(text->sentences); // Освобождаем массив предложений
@@ -55,7 +97,14 @@ void del_tabulation(Text *text){
 }
 
 // Первичное считывание текста из stdin
-void first_read_text(char** text) {
+void first_read_text(char** text) {\
+
+    /*
+        Создаёт строку, затем считывает порционно из поктока stdin, проверяет, есть ли \n\n,
+        если есть завершает считывание, если нет, то проверяет есть ли место в строке, если его нету,
+        то увеличивает размер, иначе заносит данные внутрь.
+    */
+
     size_t size = START_TEXT_SIZE; 
     int len = 0;             
     *text = malloc(size);       
@@ -99,6 +148,15 @@ void first_read_text(char** text) {
 
 void convert_text(char** text, Text* cnv_txt){
 
+    /*
+        Сначала в поле структуры sentences выделяет место под массив структур sentences.
+        затем инициализирует первую строку. Создаёт локальные переменные.
+        После этого поэтапно считывает символы из первоначально введенного массива, проверят его.
+        Проверяет есть ли место предложении, есть ли место в тексте для нового предложения, и только потом
+        если символ является точкой, то завершает предложение и идет на следующее, если символ не точка, то 
+        просто заносит его в текущее предложение.
+    */
+
     // Инициализируем массив указателей на предложения
     cnv_txt->sentences = malloc(BASE_LEN_TEXT * sizeof(Sentence));
 
@@ -133,8 +191,7 @@ void convert_text(char** text, Text* cnv_txt){
 
 
         if((*text)[i] == '.'){
-            cnv_txt->sentences[cnv_txt->count].string[local_len_sent] = (*text)[i];
-            cnv_txt->sentences[cnv_txt->count].string[local_len_sent + 1] = '\0';
+            cnv_txt->sentences[cnv_txt->count].string[local_len_sent] = '\0';
 
             // Если конец предложения, то обнуляем прошлые переменные
             local_len_sent = 0;
@@ -146,7 +203,7 @@ void convert_text(char** text, Text* cnv_txt){
             local_len_sent++;
         }
     }
-
+    
     // Если последняя строка не заканчивается точной, то мы последним символом заканчиваем строку
     cnv_txt->sentences[cnv_txt->count].string[local_len_sent + 1] = '\0';
 
@@ -157,9 +214,12 @@ void read_text(Text* cnv_txt){
 
     char *text = NULL;
 
+    // Обработка текста и чтение его
     first_read_text(&text);
+
     convert_text(&text, cnv_txt);
     del_tabulation(cnv_txt);
+    del_double(cnv_txt);
 
     free(text);
 }
