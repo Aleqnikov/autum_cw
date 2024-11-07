@@ -97,7 +97,7 @@ void del_tabulation(Text *text){
 }
 
 // Первичное считывание текста из stdin
-void first_read_text(char** text) {\
+void first_read_text(char** text) {
 
     /*
         Создаёт строку, затем считывает порционно из поктока stdin, проверяет, есть ли \n\n,
