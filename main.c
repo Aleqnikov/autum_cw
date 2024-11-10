@@ -14,12 +14,12 @@ int main(void){
 	scanf("%d", &mode);
     getchar();
 	
-    
+    Text result;
 
 	switch (mode)
 	{
 	case 1:
-		Text result;
+		
     	read_text(&result);
 
 		mod1(&result);
