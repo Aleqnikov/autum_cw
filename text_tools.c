@@ -1,4 +1,4 @@
-#include "read_text.h"
+#include "text_tools.h"
 
 #define SIZE   11
 #define START_TEXT_SIZE 32  
@@ -49,7 +49,7 @@ void del_double(Text *text){
     Пробегает по всем предложениям, сравнивая с теми, что находятся сверху, если они равны, то сдвигает всё вверх.
     */
 
-   for(int i = 0; i < text->count + 1; i++){
+   for(int i = 0; i < text->count; i++){
         for(int j = 0; j < i; j++){
             if(check_double(text->sentences[i], text->sentences[j])){
                 
@@ -74,11 +74,12 @@ void chk_crr_memall(void *ptr) {
 }
 
 void free_text(Text *text) {
-    for (size_t i = 0; i < text->count + 1; i++) {
+    for (size_t i = 0; i < text->capacity; i++) {
         
-        // puts(text->sentences[i].string); // Временно, для отладки
-        printf("%s|", text->sentences[i].string);
-        
+        // Временно, для отладки
+        if(i<text->count)
+            printf("%s|", text->sentences[i].string);
+
         free(text->sentences[i].string); // Освобождаем каждую строку
     }
     free(text->sentences); // Освобождаем массив предложений
@@ -87,7 +88,7 @@ void free_text(Text *text) {
 // Удаляет лишние символы до начала предложения
 void del_tabulation(Text *text){
 
-    for(int i = 0; i < text->count + 1; i++){
+    for(int i = 0; i < text->count; i++){
         int shift = 0;
         while(isspace(text->sentences[i].string[shift]) != 0)
             shift++;
@@ -149,6 +150,7 @@ void first_read_text(char** text) {
 void convert_text(char** text, Text* cnv_txt){
 
     /*
+        Первым делом проверям, есть ли точка в последнем предложении.
         Сначала в поле структуры sentences выделяет место под массив структур sentences.
         затем инициализирует первую строку. Создаёт локальные переменные.
         После этого поэтапно считывает символы из первоначально введенного массива, проверят его.
@@ -156,6 +158,9 @@ void convert_text(char** text, Text* cnv_txt){
         если символ является точкой, то завершает предложение и идет на следующее, если символ не точка, то 
         просто заносит его в текущее предложение.
     */
+
+   // Проверяем есть ли точка
+    bool dot_in_st = (*(strchr(*text, '\0') - 1)) != '.';
 
     // Инициализируем массив указателей на предложения
     cnv_txt->sentences = malloc(BASE_LEN_TEXT * sizeof(Sentence));
@@ -165,18 +170,17 @@ void convert_text(char** text, Text* cnv_txt){
      
     cnv_txt->count = 0;
     cnv_txt->capacity = BASE_LEN_TEXT;
+    cnv_txt->sentences[0].size = BASE_LEN_SENT;
 
     int local_len_sent = 0;
-    int limit_len_sent = BASE_LEN_SENT;
-
 
     for(int i = 0; (*text)[i] != '\0'; i++){
         
 
         // Проверяем есть ли место в предложении под символ, если нет то динамически расширяем
-        if(local_len_sent + 2 >= limit_len_sent){
-            limit_len_sent*= 2;
-            cnv_txt->sentences[cnv_txt->count].string = realloc(cnv_txt->sentences[cnv_txt->count].string, limit_len_sent);
+        if(local_len_sent + 2 >= cnv_txt->sentences[cnv_txt->count].size ){
+            cnv_txt->sentences[cnv_txt->count].size*= 2;
+            cnv_txt->sentences[cnv_txt->count].string = realloc(cnv_txt->sentences[cnv_txt->count].string, cnv_txt->sentences[cnv_txt->count].size);
 
             chk_crr_memall(cnv_txt->sentences[cnv_txt->count].string);
         }
@@ -191,12 +195,14 @@ void convert_text(char** text, Text* cnv_txt){
 
 
         if((*text)[i] == '.'){
-            cnv_txt->sentences[cnv_txt->count].string[local_len_sent] = '\0';
+            cnv_txt->sentences[cnv_txt->count].string[local_len_sent] = '.';
+            cnv_txt->sentences[cnv_txt->count].string[local_len_sent + 1] = '\0';
 
             // Если конец предложения, то обнуляем прошлые переменные
             local_len_sent = 0;
-            limit_len_sent = BASE_LEN_SENT;
+
             cnv_txt->count++;
+            cnv_txt->sentences[cnv_txt->count].size = BASE_LEN_SENT;
             cnv_txt->sentences[cnv_txt->count].string = malloc(BASE_LEN_SENT * sizeof(char)); 
         }else{
             cnv_txt->sentences[cnv_txt->count].string[local_len_sent] = (*text)[i];
@@ -204,8 +210,15 @@ void convert_text(char** text, Text* cnv_txt){
         }
     }
     
-    // Если последняя строка не заканчивается точной, то мы последним символом заканчиваем строку
-    cnv_txt->sentences[cnv_txt->count].string[local_len_sent + 1] = '\0';
+
+
+    if(dot_in_st){
+        // Последнее предложение тоже нужно учесть, если оно не заканчивается точкой     
+        cnv_txt->sentences[cnv_txt->count].string[local_len_sent] = '.';
+        cnv_txt->sentences[cnv_txt->count].string[local_len_sent  + 1] = '\0';
+
+        cnv_txt->count++; 
+    }  
 
 }
 

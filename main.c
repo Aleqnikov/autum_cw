@@ -1,7 +1,7 @@
 #include <stdio.h>
 
 #include "mods.h"
-#include "read_text.h"
+#include "text_tools.h"
 #include "structures.h"
 
 
@@ -35,12 +35,12 @@ int main(void){
 		
 		break;
 	case 5:
+		mod5();
 		break;
 	
 	default:
 		printf("Error: ошибка ввода, неправильный режим.");
 	}
-
 
 	return 0;
 }
