@@ -1,55 +1,60 @@
 #include "mods.h"
 #include "text_tools.h"
 
-
-
 void mod1(Text *text){
-    /*
-        Пробегаемся по каждому предложению.
-        Затем строем строку. И выводим её
-    */
 
     for(int i = 0; i < text->count; i++){
-        const char delimiters[] = " ,."; // Разделители
-        char *token;
 
-        token = strtok(text->sentences[i].string, delimiters);
+        const char delimiters[] = " ,.\n\t"; // Разделители
+        char *word;
 
-        char mask[strlen(token) + 3];
+        word = strtok(text->sentences[i].string, delimiters);
 
-        strcpy(mask, token);
+        char mask[strlen(word) + 2];
+
+        strcpy(mask, word);
 
         int mask_sb = strlen(mask);
+        word = strtok(NULL, delimiters); 
 
-        token = strtok(NULL, delimiters); 
-        while (token != NULL) {         
-            if(strlen(token) < mask_sb){
-                mask_sb = strlen(token);
+        while (word != NULL) {  
+            /*
+                Проверяет длину нового слова, если длина меньше нынешней маски 
+                то длина маски становится длиной этого слова, затем поэлементно 
+                сравниваем их, и в конец добавляем спец символы. Если их длина 
+                равна то просто сравнимаем, а иначе добавляем доп символ в конец
+                и проверям только первое какое то кол во символов
+            */ 
+
+            if(strlen(word) < mask_sb){
+                mask_sb = strlen(word);
+
                 for(int i = 0; i < mask_sb; i++){
-                    if(mask[i] != token[i])
+                    if(mask[i] != word[i])
                         mask[i] = '?';
                 }
 
                 mask[mask_sb] = '*';
                 mask[mask_sb + 1] = '\0';
-            } else if (strlen(token) == mask_sb){
+            } else if (strlen(word) == mask_sb){
                 for(int i = 0; i < mask_sb; i++){
-                    if(mask[i] != token[i])
+                    if(mask[i] != word[i])
                         mask[i] = '?';
                 }
             } else{
                 for(int i = 0; i < mask_sb; i++){
-                    if(mask[i] != token[i])
+                    if(mask[i] != word[i])
                         mask[i] = '?';
                 }
 
                 mask[mask_sb ] = '*';
                 mask[mask_sb + 1] = '\0';
             }
-            
-            token = strtok(NULL, delimiters); 
-        }
 
+    
+            word = strtok(NULL, delimiters); 
+        }
+        
         puts(mask);
     }
 }
