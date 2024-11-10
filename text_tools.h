@@ -14,3 +14,4 @@ void read_text(Text* cnv_txt);
 bool check_double(Sentence checkd_sent, Sentence sent2);
 void del_double(Text *text);
 void text_output(Text *text);
+void chk_crr_memall(void *ptr);
