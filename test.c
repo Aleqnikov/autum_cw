@@ -250,6 +250,43 @@ void convert_text(char** text, Text* cnv_txt){
 }
 
 
+void mod2(Text *text){
+
+    
+    for(int i = 0; i < text->count; i++){
+
+        const char delimiters[] = " ,.\n\t"; // Разделители
+        char *word;
+
+        word = strtok(text->sentences[i].string, delimiters);
+
+        int flag = false;
+
+        while (word != NULL) {  
+
+            if(islower(word[0]))
+                flag = true;
+            word = strtok(NULL, delimiters); 
+        }
+
+        if(flag){
+            free(text->sentences[i].string);
+
+            for(int k = i; k < text->count; k++){
+                text->sentences[k] = text->sentences[k + 1];
+            }
+            i--;
+            text->count--;
+        }
+    }
+}
+
+// Вывод текста
+void text_output(Text *text){
+    for (size_t i = 0; i < text->count; i++) 
+        printf("%s|", text->sentences[i].string);
+}
+
 int main(void){
 	printf("Course work for option 5.3, created by Ivan Aleinikov.\n");
 
@@ -260,12 +297,13 @@ int main(void){
 
     char *text = NULL;
 
+    Text result;
 	switch (mode)
 	{
 	case 1:
 		int len_text = read_text(&text);
 
-        Text result;
+        
         convert_text(&text, &result);
         del_tabulation(&result);
         del_double(&result);
@@ -274,7 +312,13 @@ int main(void){
         free_text(&result);
 		break;
 	case 2:
-		
+		read_text(&result);
+
+		mod2(&result);
+
+		text_output(&result);
+
+		free_text(&result);
 		break;
 	case 3:
 		
