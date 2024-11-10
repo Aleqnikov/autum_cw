@@ -3,6 +3,7 @@
 
 typedef struct{
 	char* string;
+    int size; 
 }Sentence;
 
 

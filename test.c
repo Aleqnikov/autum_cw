@@ -24,7 +24,7 @@ typedef struct{
 
 
 void free_text(Text *text) {
-    for (size_t i = 0; i < text->count + 1; i++) {
+    for (size_t i = 0; i < text->count; i++) {
         puts(text->sentences[i].string);
         free(text->sentences[i].string); // Освобождаем каждую строку
     }
@@ -34,7 +34,7 @@ void free_text(Text *text) {
 // Delete tabs and space before first symbol
 void del_tabulation(Text *text){
 
-    for(int i = 0; i < text->count + 1; i++){
+    for(int i = 0; i < text->count; i++){
         int shift = 0;
         while(isspace(text->sentences[i].string[shift]) != 0)
             shift++;
@@ -93,6 +93,9 @@ int read_text(char** text) {
 
 void convert_text(char** text, Text* cnv_txt){
 
+
+    // Проверяем есть ли точка
+    bool dot = (*(strchr(*text, '\0') - 1)) != '.';
     // Инициализируем массив указателей на предложения
     cnv_txt->sentences = malloc(BASE_LEN_TEXT * sizeof(Sentence));
 
@@ -130,6 +133,15 @@ void convert_text(char** text, Text* cnv_txt){
             cnv_txt->sentences[cnv_txt->count].string[local_len_sent] = (*text)[i];
             local_len_sent++;
         }
+    }
+
+
+    if(dot){
+        // Последнее предложение тоже нужно учесть, если оно не заканчивается точкой     
+        cnv_txt->sentences[cnv_txt->count].string[local_len_sent] = '.';
+        cnv_txt->sentences[cnv_txt->count].string[local_len_sent  + 1] = '\0';
+
+        cnv_txt->count++; 
     }
 
     cnv_txt->sentences[cnv_txt->count].string[local_len_sent + 1] = '\0';
