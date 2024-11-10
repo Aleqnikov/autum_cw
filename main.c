@@ -10,23 +10,26 @@
 int main(void){
 	printf("Course work for option 5.3, created by Ivan Aleinikov.\n");
 
-
 	int mode;
 	scanf("%d", &mode);
     getchar();
-
+	
     
 
 	switch (mode)
 	{
 	case 1:
-        Text result;
-        read_text(&result);
+		Text result;
+    	read_text(&result);
+
+		mod1(&result);
 
 		free_text(&result);
 		break;
 	case 2:
+
 		
+
 		break;
 	case 3:
 		

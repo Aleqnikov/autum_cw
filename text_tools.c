@@ -1,6 +1,6 @@
 #include "text_tools.h"
 
-#define SIZE   11
+#define SIZE_BUFFER   11
 #define START_TEXT_SIZE 32  
 
 #define BASE_LEN_TEXT 10
@@ -51,8 +51,9 @@ void del_double(Text *text){
 
    for(int i = 0; i < text->count; i++){
         for(int j = 0; j < i; j++){
+            
             if(check_double(text->sentences[i], text->sentences[j])){
-                
+                free(text->sentences[i].string);
                 // Сдвигаем предложения
                 for(int k = i; k < text->count; k++){
                     text->sentences[k] = text->sentences[k + 1];
@@ -73,14 +74,16 @@ void chk_crr_memall(void *ptr) {
     } 
 }
 
-void free_text(Text *text) {
-    for (size_t i = 0; i < text->capacity; i++) {
-        
-        // Временно, для отладки
-        if(i<text->count)
-            printf("%s|", text->sentences[i].string);
+// Вывод текста
+void text_output(Text *text){
+    for (size_t i = 0; i < text->count; i++) 
+        printf("%s|", text->sentences[i].string);
+}
+// Освобождает выделенную память
 
-        free(text->sentences[i].string); // Освобождаем каждую строку
+void free_text(Text *text) {
+    for (size_t i = 0; i < text->count; i++) {
+        free(text->sentences[i].string); // Освобождаем каждую строку 
     }
     free(text->sentences); // Освобождаем массив предложений
 }
@@ -113,7 +116,7 @@ void first_read_text(char** text) {
     chk_crr_memall(*text);
 
     // Строка - буфер
-    char local_string[SIZE]; 
+    char local_string[SIZE_BUFFER]; 
 
     while (true) {
         if (fgets(local_string, sizeof(local_string), stdin) == NULL)
@@ -218,7 +221,9 @@ void convert_text(char** text, Text* cnv_txt){
         cnv_txt->sentences[cnv_txt->count].string[local_len_sent  + 1] = '\0';
 
         cnv_txt->count++; 
-    }  
+    } else {
+        free(cnv_txt->sentences[cnv_txt->count].string);  // Убираем пустую строку, если она создана
+    }
 
 }
 

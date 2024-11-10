@@ -22,6 +22,106 @@ typedef struct{
     int capacity; 
 }Text;
 
+bool check_double(Sentence checkd_sent, Sentence sent2){
+
+    /*
+    Несколько проверок, первая - если отличается длина, то сразу нет
+    А затем посимволно, и если хоть один символ отличается, то нет
+    */
+
+   if(strlen(checkd_sent.string) != strlen(sent2.string))
+        return false;
+   
+
+    for(int i = 0; i < strlen(checkd_sent.string); i++){
+        if(tolower(checkd_sent.string[i]) != tolower(sent2.string[i]))
+            return false;
+    }
+
+    return true;
+}
+
+
+void del_double(Text *text){
+    /*
+    Пробегает по всем предложениям, сравнивая с теми, что находятся сверху, если они равны, то сдвигает всё вверх.
+    */
+
+   for(int i = 0; i < text->count; i++){
+        for(int j = 0; j < i; j++){
+            
+            if(check_double(text->sentences[i], text->sentences[j])){
+                
+                // Сдвигаем предложения
+                for(int k = i; k < text->count; k++){
+                    text->sentences[k] = text->sentences[k + 1];
+                }
+                i--;
+                text->count--;
+                break;
+            }
+        }
+   }  
+}
+
+void mod1(Text *text){
+    /*
+        Пробегаемся по каждому предложению.
+        Затем строем строку. И выводим её
+    */
+
+    for(int i = 0; i < text->count; i++){
+        const char delimiters[] = " ,."; // Разделители
+        char *token;
+
+
+        char strss[strlen(text->sentences[i].string)];
+        strcpy(strss, text->sentences[i].string);
+
+        token = strtok(strss, delimiters);
+
+        char mask[strlen(token) + 3];
+
+        strcpy(mask, token);
+
+        int mask_sb = strlen(mask);
+
+        token = strtok(NULL, delimiters); 
+        while (token != NULL) {
+            printf("|%s|\n", token);
+            
+            
+            if(strlen(token) < mask_sb){
+                mask_sb = strlen(token);
+                for(int i = 0; i < mask_sb; i++){
+                    if(mask[i] != token[i])
+                        mask[i] = '?';
+                }
+
+                mask[mask_sb] = '*';
+                mask[mask_sb + 1] = '\0';
+            } else if (strlen(token) == mask_sb){
+                for(int i = 0; i < mask_sb; i++){
+                    if(mask[i] != token[i])
+                        mask[i] = '?';
+                }
+            } else{
+                for(int i = 0; i < mask_sb; i++){
+                    if(mask[i] != token[i])
+                        mask[i] = '?';
+                }
+
+                mask[mask_sb ] = '*';
+                mask[mask_sb + 1] = '\0';
+            }
+            
+
+            token = strtok(NULL, delimiters); 
+        }
+
+        puts(mask);
+    }
+}
 
 void free_text(Text *text) {
     for (size_t i = 0; i < text->count; i++) {
@@ -144,7 +244,7 @@ void convert_text(char** text, Text* cnv_txt){
         cnv_txt->count++; 
     }
 
-    cnv_txt->sentences[cnv_txt->count].string[local_len_sent + 1] = '\0';
+    
 
 
 }
@@ -168,6 +268,9 @@ int main(void){
         Text result;
         convert_text(&text, &result);
         del_tabulation(&result);
+        del_double(&result);
+
+        
         free_text(&result);
 		break;
 	case 2:
