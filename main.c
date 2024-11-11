@@ -36,7 +36,12 @@ int main(void){
 		free_text(&result);
 		break;
 	case 3:
-		
+		read_text(&result);
+		mod3(&result);
+
+		text_output(&result);
+
+		free_text(&result);
 		break;
 	case 4:
 		read_text(&result);

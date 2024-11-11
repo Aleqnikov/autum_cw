@@ -4,6 +4,76 @@
 
 #define BASE_LEN_WORDS 16
 
+bool is_vowel(char symb){
+
+    char letters[] = "aeiouyAEIOUY";
+
+    if(strchr(letters, symb) != NULL)
+        return true;
+
+    return false;
+
+}
+
+void cnt_vowel(Sentence* checkd_sent){
+    int cnt = 0;
+
+    for(int i = 0; i < strlen(checkd_sent->string); i++){
+        if(is_vowel(checkd_sent->string[i]))
+            cnt++;
+    }
+
+    checkd_sent->size = cnt;
+}
+
+Sentence* split_sentense(char* sent, const char delimiters[]){
+    char *word;
+
+    char sentence_copy[strlen(sent)];
+    strcpy(sentence_copy, sent);
+
+    word = strtok(sentence_copy, delimiters);
+
+    int cnt_wds =  0;
+    int lim_words = BASE_LEN_WORDS;
+    Sentence*  words = malloc(BASE_LEN_WORDS * sizeof(Sentence));
+
+    chk_crr_memall(words);
+
+    words[cnt_wds].string = malloc(strlen(word)*sizeof(char));
+
+    chk_crr_memall(words[cnt_wds].string);
+
+    strcpy(words[cnt_wds++].string, word);
+
+    word = strtok(NULL, delimiters); 
+    while (word != NULL) {  
+
+        if(cnt_wds + 1 > lim_words){
+            lim_words*=2;
+            words = realloc(words, lim_words* sizeof(Sentence));
+            chk_crr_memall(words);
+        }
+
+        words[cnt_wds].string = malloc(strlen(word)*sizeof(char));
+        chk_crr_memall(words[cnt_wds].string);
+        strcpy(words[cnt_wds++].string, word);
+
+        word = strtok(NULL, delimiters); 
+    }
+    // Размер массива будем хранить в первом элементе, тк они не используются
+    words[0].size = cnt_wds;
+    return words;
+        
+}
+
+// Функция для сортировки массива слов по количеству гласных
+int compare(const void* a, const void* b) {
+    Sentence* word_a = (Sentence*)a;
+    Sentence* word_b = (Sentence*)b;
+    return word_a->size - word_b->size;
+}
+
 
 void mod1(Text *text){
 
@@ -96,6 +166,143 @@ void mod2(Text *text){
     }
 }
 
+void mod3(Text *text){
+    /*
+        Будем использовать струкруту Sentense как word, где size - это будет количество грасных букв
+        
+        Сначала мы создаём динамический массив, считываем туда каждое слово, попутно считая гласные буквы, 
+        затем мы сортируем массив по количеству гласных букв в каждом слове, а затем мы формируем
+        новое предложение, добавляя попутно к словам знаки препинания.
+
+        Знаки препинания мы достаём при помощи strtook в отдельный массив, как разделители используем буквы.
+    */
+
+    for(int i = 0; i < text->count; i++){
+        // Создаём и заполняем динамический массив
+
+        const char delimiters[] = " ,.\n\t"; // Разделители
+        char *word;
+
+        char sentence_copy[strlen(text->sentences[i].string)];
+        strcpy(sentence_copy, text->sentences[i].string);
+
+        word = strtok(sentence_copy, delimiters);
+
+        int cnt_wds =  0;
+        int lim_words = BASE_LEN_WORDS;
+        Sentence*  words = malloc(BASE_LEN_WORDS * sizeof(Sentence));
+
+        chk_crr_memall(words);
+
+        words[cnt_wds].string = malloc(strlen(word)*sizeof(char));
+
+        chk_crr_memall(words[cnt_wds].string);
+
+        strcpy(words[cnt_wds++].string, word);
+
+        // Считаем количество гласных
+        cnt_vowel(&words[cnt_wds - 1]);
+
+        word = strtok(NULL, delimiters); 
+        while (word != NULL) {  
+
+            if(cnt_wds + 1 > lim_words){
+                lim_words*=2;
+                words = realloc(words, lim_words* sizeof(Sentence));
+                chk_crr_memall(words);
+            }
+
+            words[cnt_wds].string = malloc(strlen(word)*sizeof(char));
+            chk_crr_memall(words[cnt_wds].string);
+            strcpy(words[cnt_wds++].string, word);
+
+            // Считаем количество гласных
+            cnt_vowel(&words[cnt_wds - 1]);
+
+            word = strtok(NULL, delimiters); 
+        }
+
+
+
+        // Сортировка слов по количеству гласных
+        qsort(words, cnt_wds, sizeof(Sentence), compare);
+
+        // Получаем знаки препинания
+        
+        Sentence* punctuation_marks = split_sentense(text->sentences[i].string, "qwertyuiopasdfghjklzxcvbnmQWERTYUIOPASDFGHJKLZXCVBNM1234567890~!@#$^&*()_+{}:''<>");
+
+        
+
+        int cnt_marks = punctuation_marks[0].size;
+        // Создаём новое предложение
+
+        /*
+            Так как функция strtok возвращает каждый элемент с \0 на конце. то строки форматного создания 
+            строку не подойдут, придётся склеивать её самостоятельно
+        */
+
+       char* string_res = malloc(sizeof(char)*strlen(text->sentences[i].string)); // Точно должно поместиться
+
+       if(cnt_wds == cnt_marks){
+            int index = 0;
+        
+            for(int k = 0; k < cnt_wds; k++){
+                for(int j = 0; j < strlen(words[k].string); j++){
+                    string_res[index++] = words[k].string[j];
+                }
+
+                
+
+                for(int j = 0; j < strlen(punctuation_marks[k].string); j++){
+                    string_res[index++] = punctuation_marks[k].string[j];
+                }
+
+                
+
+            }
+        } else{
+            int index = 0;
+            for(int k = 0; i < cnt_marks; k++){
+                for(int j = 0; j < strlen(words[k].string); j++){
+                    string_res[index++] = words[k].string[j];
+                } 
+
+                for(int j = 0; j < strlen(punctuation_marks[k].string); j++){
+                    string_res[index++] = punctuation_marks[k].string[j];
+                }
+
+                
+            }
+
+            
+       }
+
+       text->sentences[i].string = string_res;
+
+
+        
+
+
+        // Освобождаем память
+        for(int m = 0; m < cnt_wds; m++)
+            free(words[m].string);
+        free(words);
+
+
+        
+
+        for(int m = 0; m < cnt_marks; m++){
+            free(punctuation_marks[m].string);
+        }
+        free(punctuation_marks);
+
+    }
+
+
+
+
+}
+
 void mod4(Text *text){
     /*
         Динамический массив слов создаём, слово - новая структура, которая нигде
@@ -169,6 +376,7 @@ void mod4(Text *text){
 
 
 }
+
 void mod5() {
     printf("1) Для каждого предложения вывести строку образец, удовлетворяющую каждому слову в предложении. Строка условия содержит: символы, ? - 1 или больше любых символов, в начале и конце образца могут быть символы * - обозначающие 0 или больше символов. Например, для слов Аристотель и Артишок, строка образец будет иметь вид Ар???о?*.\n2) Удалить все предложения, в которых нет заглавных букв в начале слова.\n3) Отсортировать слова в предложении по количеству гласных букв в слове.\n4) Для каждого предложения вывести количество одинаковых слов в строке в формате Количество одинаковых слов: <число>, где <число> – кол-во одинаковых слов. Пример: курсовая сдана, курсовая сдана сдана. -> Количество одинаковых слов: 5 (потому что 2 раза курсовая и 3 раза сдана). Слова сравнивать без учёта регистра\n");
 }
