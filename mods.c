@@ -26,13 +26,20 @@ void cnt_vowel(Sentence* checkd_sent){
     checkd_sent->size = cnt;
 }
 
-Sentence* split_sentense(char* sent, const char delimiters[]){
+Sentence* split_sentense(char* sent, int mod){
     char *word;
+    char del[200];
 
+    if(mod==1){
+        strcpy(del, " ,.\n\t");
+    }else{
+        strcpy(del, "qwertyuiopasdfghjklzxcvbnmQWERTYUIOPASDFGHJKLZXCVBNM1234567890~!@#$^&*-()_+{}:''<>\"");
+    }
+    
     char sentence_copy[strlen(sent)];
     strcpy(sentence_copy, sent);
 
-    word = strtok(sentence_copy, delimiters);
+    word = strtok(sentence_copy, del);
 
     int cnt_wds =  0;
     int lim_words = BASE_LEN_WORDS;
@@ -46,7 +53,7 @@ Sentence* split_sentense(char* sent, const char delimiters[]){
 
     strcpy(words[cnt_wds++].string, word);
 
-    word = strtok(NULL, delimiters); 
+    word = strtok(NULL, del); 
     while (word != NULL) {  
 
         if(cnt_wds + 1 > lim_words){
@@ -59,13 +66,14 @@ Sentence* split_sentense(char* sent, const char delimiters[]){
         chk_crr_memall(words[cnt_wds].string);
         strcpy(words[cnt_wds++].string, word);
 
-        word = strtok(NULL, delimiters); 
+        word = strtok(NULL, del); 
     }
     // Размер массива будем хранить в первом элементе, тк они не используются
     words[0].size = cnt_wds;
     return words;
         
 }
+
 
 // Функция для сортировки массива слов по количеству гласных
 int compare(const void* a, const void* b) {
@@ -180,112 +188,54 @@ void mod3(Text *text){
     for(int i = 0; i < text->count; i++){
         // Создаём и заполняем динамический массив
 
-        const char delimiters[] = " ,.\n\t"; // Разделители
-        char *word;
 
-        char sentence_copy[strlen(text->sentences[i].string)];
-        strcpy(sentence_copy, text->sentences[i].string);
-
-        word = strtok(sentence_copy, delimiters);
-
-        int cnt_wds =  0;
-        int lim_words = BASE_LEN_WORDS;
-        Sentence*  words = malloc(BASE_LEN_WORDS * sizeof(Sentence));
-
-        chk_crr_memall(words);
-
-        words[cnt_wds].string = malloc(strlen(word)*sizeof(char));
-
-        chk_crr_memall(words[cnt_wds].string);
-
-        strcpy(words[cnt_wds++].string, word);
-
-        // Считаем количество гласных
+        Sentence*  words = split_sentense(text->sentences[i].string, 1);
+        int cnt_wds =  words[0].size;
         cnt_vowel(&words[cnt_wds - 1]);
 
-        word = strtok(NULL, delimiters); 
-        while (word != NULL) {  
-
-            if(cnt_wds + 1 > lim_words){
-                lim_words*=2;
-                words = realloc(words, lim_words* sizeof(Sentence));
-                chk_crr_memall(words);
-            }
-
-            words[cnt_wds].string = malloc(strlen(word)*sizeof(char));
-            chk_crr_memall(words[cnt_wds].string);
-            strcpy(words[cnt_wds++].string, word);
-
-            // Считаем количество гласных
-            cnt_vowel(&words[cnt_wds - 1]);
-
-            word = strtok(NULL, delimiters); 
-        }
-
-
+        for(int k = 0; k < cnt_wds; k++)
+            cnt_vowel(&words[k]);
+        
 
         // Сортировка слов по количеству гласных
         qsort(words, cnt_wds, sizeof(Sentence), compare);
 
-        // Получаем знаки препинания
-        
-        Sentence* punctuation_marks = split_sentense(text->sentences[i].string, "qwertyuiopasdfghjklzxcvbnmQWERTYUIOPASDFGHJKLZXCVBNM1234567890~!@#$^&*()_+{}:''<>");
-
-        
-
+        // Получаем знаки препинания      
+        Sentence* punctuation_marks = split_sentense(text->sentences[i].string, 0);
         int cnt_marks = punctuation_marks[0].size;
-        // Создаём новое предложение
 
-        /*
-            Так как функция strtok возвращает каждый элемент с \0 на конце. то строки форматного создания 
-            строку не подойдут, придётся склеивать её самостоятельно
-        */
 
-       char* string_res = malloc(sizeof(char)*strlen(text->sentences[i].string)); // Точно должно поместиться
 
-       if(cnt_wds == cnt_marks){
-            int index = 0;
+        int total_length = 1;  // Начальная длина для символа '\0' в конце
+        for (int j = 0; j < cnt_wds; j++) {
+            total_length += strlen(words[j].string);
+            if (j < cnt_marks) {
+                total_length += strlen(punctuation_marks[j].string);
+            }
+        }
+
+        // Выделяем память для base
+        char *base = (char *)malloc(total_length * sizeof(char));
         
-            for(int k = 0; k < cnt_wds; k++){
-                for(int j = 0; j < strlen(words[k].string); j++){
-                    string_res[index++] = words[k].string[j];
-                }
+        base[0] = '\0';  // Инициализируем пустую строку
 
-                
-
-                for(int j = 0; j < strlen(punctuation_marks[k].string); j++){
-                    string_res[index++] = punctuation_marks[k].string[j];
-                }
-
-                
-
+        // Формируем строку base, объединяя слова и знаки препинания
+        for (int j = 0; j < cnt_wds; j++) {
+            strcat(base, words[j].string);
+            if (j < cnt_marks) {
+                strcat(base, punctuation_marks[j].string);
             }
-        } else{
-            int index = 0;
-            for(int k = 0; i < cnt_marks; k++){
-                for(int j = 0; j < strlen(words[k].string); j++){
-                    string_res[index++] = words[k].string[j];
-                } 
-
-                for(int j = 0; j < strlen(punctuation_marks[k].string); j++){
-                    string_res[index++] = punctuation_marks[k].string[j];
-                }
-
-                
-            }
-
-            
-       }
-
-       text->sentences[i].string = string_res;
-
+        }
 
         
+       text->sentences[i].string = base;
 
 
         // Освобождаем память
-        for(int m = 0; m < cnt_wds; m++)
-            free(words[m].string);
+        for(int l = 0; l < cnt_wds; l++){
+            free(words[l].string);
+
+        }
         free(words);
 
 
@@ -295,7 +245,6 @@ void mod3(Text *text){
             free(punctuation_marks[m].string);
         }
         free(punctuation_marks);
-
     }
 
 
