@@ -77,7 +77,7 @@ void chk_crr_memall(void *ptr) {
 // Вывод текста
 void text_output(Text *text){
     for (size_t i = 0; i < text->count; i++) 
-        printf("%s|", text->sentences[i].string);
+        printf("%s\n", text->sentences[i].string);
 }
 // Освобождает выделенную память
 
