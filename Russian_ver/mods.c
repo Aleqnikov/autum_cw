@@ -31,9 +31,9 @@ Sentence* split_sentense(wchar_t* sent, int mod) {
     wchar_t separations[200];
 
     if (mod == 1) {
-        wcscpy(separations, L" ,.\n\t");
+        wcscpy(separations, L" ,.");
     } else {
-        wcscpy(separations, L"ёйцукенгшщзхъфывапролджэячсмитьбюЁЙЦУКЕНГШЩЗХЪФЫВАПРОЛДЖЭЯЧСМИТЬБЮqwertyuiopasdfghjklzxcvbnmQWERTYUIOPASDFGHJKLZXCVBNM1234567890~!@#$^&*-()_+{}:''<>\"");
+        wcscpy(separations, L"ёйцукенгшщзхъфывапролджэячсмитьбюЁЙЦУКЕНГШЩЗХЪФЫВАПРОЛДЖЭЯЧСМИТЬБЮqwertyuiopasdfghjklzxcvbnmQWERTYUIOPASDFGHJKLZXCVBNM1234567890~!@#$^&*-()_+{}:'\n\t'<>\"");
     }
 
     wchar_t *token;
@@ -44,18 +44,22 @@ Sentence* split_sentense(wchar_t* sent, int mod) {
 
     int cnt_wds = 0;
     int lim_words = BASE_LEN_WORDS;
-    Sentence* words = malloc(lim_words * sizeof(Sentence));
-    chk_crr_memall(words);
+    Sentence* temp = malloc(lim_words * sizeof(Sentence));
+    chk_crr_memall(temp);
+    Sentence* words = temp;
+    
+    wchar_t * temp_w = malloc((wcslen(word) + 1) * sizeof(wchar_t));
+    chk_crr_memall(temp_w);
 
-    words[cnt_wds].string = malloc((wcslen(word) + 1) * sizeof(wchar_t));
-    chk_crr_memall(words[cnt_wds].string);
+    words[cnt_wds].string = temp_w;
+    
     wcscpy(words[cnt_wds++].string, word);
 
     word = wcstok(NULL, separations, &token);
     while (word != NULL) {
         if (cnt_wds + 1 > lim_words) {
             lim_words *= 2;
-            Sentence *temp = realloc(words, lim_words * sizeof(Sentence));
+            temp = realloc(words, lim_words * sizeof(Sentence));
                 
             chk_crr_memall(temp);
                 
@@ -228,7 +232,7 @@ void mod3(Text *text){
         }
 
         // Выделяем память для base
-        wchar_t *base = (wchar_t *)malloc(total_length * sizeof(wchar_t));
+        wchar_t *base = (wchar_t *)malloc((total_length) * sizeof(wchar_t));
         
         chk_crr_memall(base);
         

@@ -76,6 +76,8 @@ void chk_crr_memall(void *ptr) {
 
 // Вывод текста
 void text_output(Text *text){
+    if(text->dot_in_last_sent)
+        text->sentences[text->count - 1].string[wcslen(text->sentences[text->count - 1].string) - 1] = L'\0';
     for (size_t i = 0; i < text->count; i++) 
         wprintf(L"%ls\n", text->sentences[i].string);
 }
@@ -101,7 +103,6 @@ void del_tabulation(Text *text){
 }
 
 // Первичное считывание текста из stdin
-
 void first_read_text(wchar_t** text) {
     /*
         Создаёт строку, затем считывает порционно из потока stdin, проверяет, есть ли \n\n,
@@ -110,9 +111,13 @@ void first_read_text(wchar_t** text) {
     */
 
     size_t size = START_TEXT_SIZE; 
-    int len = 0;             
-    *text = malloc(size * sizeof(wchar_t));       
-    chk_crr_memall(*text);
+    int len = 0;   
+
+    // Переменная для проверки корректности выделенной памяти
+    wchar_t* tmp_t = malloc(size * sizeof(wchar_t));   
+    chk_crr_memall(tmp_t);    
+    *text = tmp_t;
+    
 
     // Строка - буфер
     wchar_t local_string[SIZE_BUFFER]; 
@@ -131,9 +136,9 @@ void first_read_text(wchar_t** text) {
         // Если длина текста превышает размер массива, увеличиваем массив
         if (len + wcslen(local_string) >= size) {
             size *= 2; 
-            wchar_t *temporarily = realloc(*text, size * sizeof(wchar_t));
-            chk_crr_memall(temporarily);
-            *text = temporarily;
+            tmp_t = realloc(*text, size * sizeof(wchar_t));
+            chk_crr_memall(tmp_t);
+            *text = tmp_t;
         }
 
         // Копируем строку в выделенную память
@@ -163,17 +168,21 @@ void convert_text(wchar_t** text, Text* cnv_txt){
     */
 
    // Проверяем есть ли точка
-    bool dot_in_st = (*(wcsrchr(*text, L'\0') - 1)) != L'.';
+    cnv_txt->dot_in_last_sent =  (*(wcsrchr(*text, L'\0') - 1)) != L'.';
 
+    Sentence* temp = malloc(BASE_LEN_TEXT * sizeof(Sentence));
+
+    chk_crr_memall(temp);
     // Инициализируем массив указателей на предложения
-    cnv_txt->sentences = malloc(BASE_LEN_TEXT * sizeof(Sentence));
+    cnv_txt->sentences = temp;
 
-    chk_crr_memall(cnv_txt->sentences);
-
+    
+    wchar_t* tmp_w = malloc(BASE_LEN_SENT * sizeof(wchar_t)); 
+    chk_crr_memall(tmp_w);
     // Инициализируем превую строку
-    cnv_txt->sentences[0].string = malloc(BASE_LEN_SENT * sizeof(wchar_t)); 
+    cnv_txt->sentences[0].string = tmp_w;
 
-    chk_crr_memall(cnv_txt->sentences[0].string);
+    
      
     cnv_txt->count = 0;
     cnv_txt->capacity = BASE_LEN_TEXT;
@@ -187,17 +196,21 @@ void convert_text(wchar_t** text, Text* cnv_txt){
         // Проверяем есть ли место в предложении под символ, если нет то динамически расширяем
         if(local_len_sent + 2 >= cnv_txt->sentences[cnv_txt->count].size ){
             cnv_txt->sentences[cnv_txt->count].size*= 2;
-            cnv_txt->sentences[cnv_txt->count].string = realloc(cnv_txt->sentences[cnv_txt->count].string, cnv_txt->sentences[cnv_txt->count].size * sizeof(wchar_t));
 
+            tmp_w = realloc(cnv_txt->sentences[cnv_txt->count].string, cnv_txt->sentences[cnv_txt->count].size * sizeof(wchar_t));
             chk_crr_memall(cnv_txt->sentences[cnv_txt->count].string);
+
+            cnv_txt->sentences[cnv_txt->count].string = tmp_w;  
         }
 
         // Проверяем, есть ли место в тексте, если нет то динамически расширяем
         if(cnv_txt->count + 2>= cnv_txt->capacity){
             cnv_txt->capacity*= 2;
-            cnv_txt->sentences = realloc(cnv_txt->sentences, cnv_txt->capacity* sizeof(Sentence));
+            temp = realloc(cnv_txt->sentences, cnv_txt->capacity* sizeof(Sentence));
 
-            chk_crr_memall(cnv_txt->sentences);
+            chk_crr_memall(temp);
+
+            cnv_txt->sentences = temp;    
         }
 
 
@@ -210,8 +223,11 @@ void convert_text(wchar_t** text, Text* cnv_txt){
 
             cnv_txt->count++;
             cnv_txt->sentences[cnv_txt->count].size = BASE_LEN_SENT;
-            cnv_txt->sentences[cnv_txt->count].string = malloc(BASE_LEN_SENT * sizeof(wchar_t)); 
-            chk_crr_memall(cnv_txt->sentences[cnv_txt->count].string);
+            tmp_w = malloc(BASE_LEN_SENT * sizeof(wchar_t)); 
+            chk_crr_memall(tmp_w);
+
+            cnv_txt->sentences[cnv_txt->count].string = tmp_w;
+            
         }else{
             cnv_txt->sentences[cnv_txt->count].string[local_len_sent] = (*text)[i];
             local_len_sent++;
@@ -220,7 +236,7 @@ void convert_text(wchar_t** text, Text* cnv_txt){
     
 
 
-    if(dot_in_st){
+    if(cnv_txt->dot_in_last_sent){
         // Последнее предложение тоже нужно учесть, если оно не заканчивается точкой     
         cnv_txt->sentences[cnv_txt->count].string[local_len_sent] = L'.';
         cnv_txt->sentences[cnv_txt->count].string[local_len_sent  + 1] = L'\0';
@@ -230,6 +246,7 @@ void convert_text(wchar_t** text, Text* cnv_txt){
         free(cnv_txt->sentences[cnv_txt->count].string);  // Убираем пустую строку, если она создана
     }
 
+    
 }
 
 // Собирает все функции воедино и апперирует ими
