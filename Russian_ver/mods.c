@@ -222,7 +222,7 @@ void mod3(Text *text){
 
         int total_length = 1;  // Начальная длина для символа '\0' в конце
         for (int j = 0; j < cnt_wds; j++) {
-            total_length += wcslen(words[j].string);
+            total_length += wcslen(words[j].string) + 1;
             if (j < cnt_marks) {
                 total_length += wcslen(punctuation_marks[j].string);
             }
@@ -241,7 +241,8 @@ void mod3(Text *text){
             }
         }
 
-       text->sentences[i].string = base;
+        free(text->sentences[i].string);
+        text->sentences[i].string = base;
 
         // Освобождаем память
         for(int l = 0; l < cnt_wds; l++){
