@@ -69,7 +69,7 @@ void del_double(Text *text){
 // Проверяет правильно ли выделена память
 void chk_crr_memall(void *ptr) {
     if (ptr == NULL) {
-        wprintf(L"Ошибка: память не была выделена (NULL указатель).\n");
+        wprintf(L"Error: память не была выделена (NULL указатель).\n");
         exit(EXIT_FAILURE); // Завершите программу с ошибкой
     } 
 }
@@ -168,8 +168,12 @@ void convert_text(wchar_t** text, Text* cnv_txt){
     // Инициализируем массив указателей на предложения
     cnv_txt->sentences = malloc(BASE_LEN_TEXT * sizeof(Sentence));
 
+    chk_crr_memall(cnv_txt->sentences);
+
     // Инициализируем превую строку
     cnv_txt->sentences[0].string = malloc(BASE_LEN_SENT * sizeof(wchar_t)); 
+
+    chk_crr_memall(cnv_txt->sentences[0].string);
      
     cnv_txt->count = 0;
     cnv_txt->capacity = BASE_LEN_TEXT;
@@ -207,6 +211,7 @@ void convert_text(wchar_t** text, Text* cnv_txt){
             cnv_txt->count++;
             cnv_txt->sentences[cnv_txt->count].size = BASE_LEN_SENT;
             cnv_txt->sentences[cnv_txt->count].string = malloc(BASE_LEN_SENT * sizeof(wchar_t)); 
+            chk_crr_memall(cnv_txt->sentences[cnv_txt->count].string);
         }else{
             cnv_txt->sentences[cnv_txt->count].string[local_len_sent] = (*text)[i];
             local_len_sent++;

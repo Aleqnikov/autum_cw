@@ -1,6 +1,6 @@
 CC = gcc
 OBJ = main.o mods.o text_tools.o
-EXEC = main
+EXEC = cw
 
 all: $(EXEC)
 

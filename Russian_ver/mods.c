@@ -56,9 +56,8 @@ Sentence* split_sentense(wchar_t* sent, int mod) {
         if (cnt_wds + 1 > lim_words) {
             lim_words *= 2;
             Sentence *temp = realloc(words, lim_words * sizeof(Sentence));
-            
                 
-            chk_crr_memall(words);
+            chk_crr_memall(temp);
                 
             words = temp;
         }
@@ -230,6 +229,8 @@ void mod3(Text *text){
 
         // Выделяем память для base
         wchar_t *base = (wchar_t *)malloc(total_length * sizeof(wchar_t));
+        
+        chk_crr_memall(base);
         
         base[0] = '\0';  // Инициализируем пустую строку
 

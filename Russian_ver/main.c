@@ -4,8 +4,8 @@
 #include "text_tools.h"
 #include "structures.h"
 
-
 int main(void){
+
     setlocale(LC_ALL, "");
 	wprintf(L"Course work for option 5.3, created by Ivan Aleinikov.\n");
 
